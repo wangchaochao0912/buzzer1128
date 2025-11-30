@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF文件上传与解析</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .file-input {
+            margin: 20px 0;
+        }
+        .upload-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .upload-btn:hover {
+            background-color: #45a049;
+        }
+        .result-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        .data-section {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .filter-section div {
+            margin-bottom: 10px;
+        }
+        .filter-section label {
+            display: inline-block;
+            width: 100px;
+        }
+        .filter-section input, .filter-section select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-btn {
+            background-color: #337ab7;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .filter-btn:hover {
+            background-color: #286090;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF文件上传与解析系统</h1>
+        
+        <div class="upload-section">
+            <h2>上传PDF文件</h2>
+            <p>请上传包含表格数据的PDF文件，系统将自动解析并存储到数据库中。</p>
+            <div class="file-input">
+                <input type="file" id="pdfFile" accept=".pdf">
+            </div>
+            <button class="upload-btn" onclick="uploadFile()">上传并解析</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在处理PDF文件，请稍候...</p>
+        </div>
+        
+        <div class="result-section" id="resultSection"></div>
+        
+        <div class="filter-section">
+            <h2>数据筛选</h2>
+            <div>
+                <label for="fileName">文件名:</label>
+                <input type="text" id="fileName" placeholder="输入文件名">
+            </div>
+            <div>
+                <label for="transactionType">交易类型:</label>
+                <select id="transactionType">
+                    <option value="">全部</option>
+                    <option value="PURCHASE">进货</option>
+                    <option value="RETURN">退货</option>
+                </select>
+            </div>
+            <div>
+                <label for="startDate">开始日期:</label>
+                <input type="date" id="startDate">
+                <label for="endDate" style="margin-left: 10px;">结束日期:</label>
+                <input type="date" id="endDate">
+            </div>
+            <div>
+                <button class="filter-btn" onclick="loadAllData()">加载全部数据</button>
+                <button class="filter-btn" onclick="filterData()">应用筛选</button>
+            </div>
+        </div>
+        
+        <div class="data-section">
+            <h2>交易数据</h2>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>日期</th>
+                        <th>款号</th>
+                        <th>名称</th>
+                        <th>数量</th>
+                        <th>单价</th>
+                        <th>金额</th>
+                        <th>备注</th>
+                        <th>交易类型</th>
+                        <th>来源文件</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showResult('请选择要上传的PDF文件', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
+            
+            fetch('/api/transactions/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success) {
+                    showResult(data.message, 'success');
+                    // 上传成功后自动加载数据
+                    setTimeout(loadAllData, 1000);
+                } else {
+                    showResult(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                showResult('上传失败: ' + error.message, 'error');
+            });
+        }
+        
+        function showResult(message, type) {
+            const resultSection = document.getElementById('resultSection');
+            resultSection.textContent = message;
+            resultSection.className = 'result-section ' + type;
+            resultSection.style.display = 'block';
+        }
+        
+        function loadAllData() {
+            fetch('/api/transactions')
+            .then(response => response.json())
+            .then(data => {
+                displayData(data);
+            })
+            .catch(error => {
+                showResult('加载数据失败: ' + error.message, 'error');
+            });
+        }
+        
+        function filterData() {
+            const fileName = document.getElementById('fileName').value;
+            const transactionType = document.getElementById('transactionType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            let url = '/api/transactions';
+            
+            if (fileName) {
+                url = '/api/transactions/by-file?fileName=' + encodeURIComponent(fileName);
+            } else if (transactionType) {
+                url = '/api/transactions/by-type?transactionType=' + encodeURIComponent(transactionType);
+            } else if (startDate && endDate) {
+                url = '/api/transactions/by-date-range?startDate=' + startDate + '&endDate=' + endDate;
+            }
+            
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                displayData(data);
+            })
+            .catch(error => {
+                showResult('筛选数据失败: ' + error.message, 'error');
+            });
+        }
+        
+        function displayData(data) {
+            const tableBody = document.getElementById('dataTableBody');
+            tableBody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">暂无数据</td></tr>';
+                return;
+            }
+            
+            data.forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                const transactionTypeText = transaction.transactionType === 'PURCHASE' ? '进货' : '退货';
+                
+                row.innerHTML = `
+                    <td>${transaction.id}</td>
+                    <td>${transaction.transactionDate || ''}</td>
+                    <td>${transaction.productCode || ''}</td>
+                    <td>${transaction.productName || ''}</td>
+                    <td>${transaction.quantity || ''}</td>
+                    <td>${transaction.unitPrice || ''}</td>
+                    <td>${transaction.totalAmount || ''}</td>
+                    <td>${transaction.remarks || ''}</td>
+                    <td>${transactionTypeText}</td>
+                    <td>${transaction.sourceFile || ''}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 页面加载时自动加载数据
+        window.onload = function() {
+            loadAllData();
+        };
+    </script>
+</body>
+</html>
