@@ -370,10 +370,10 @@ public class PdfParserService {
                         // 有多个表格，第一个表格为进货，第二个表格为退货
                         if (headerIndex == 0) {
                             // 第一个表格，设置为进货
-                            inventory.setReturn(false);
+                            inventory.setReturned(false);
                         } else if (headerIndex == 1) {
                             // 第二个表格，设置为退货
-                            inventory.setReturn(true);
+                            inventory.setReturned(true);
                         }
                         // 超过两个表格的情况，暂时按默认处理
                     }
@@ -476,34 +476,32 @@ public class PdfParserService {
                                  int dateIndex, int styleNumberIndex, int nameIndex, 
                                  int quantityIndex, int unitPriceIndex, int amountIndex, int remarkIndex) {
         int offset = 0;
-        // 检查前面的每一列是否有合并
-        for (int j = 0; j < columnIndex; j++) {
-            // 找到前面列对应的表头索引
-            int headerIndexForColumn = -1;
-            if (j == dateIndex) headerIndexForColumn = dateIndex;
-            else if (j == styleNumberIndex) headerIndexForColumn = styleNumberIndex;
-            else if (j == nameIndex) headerIndexForColumn = nameIndex;
-            else if (j == quantityIndex) headerIndexForColumn = quantityIndex;
-            else if (j == unitPriceIndex) headerIndexForColumn = unitPriceIndex;
-            else if (j == amountIndex) headerIndexForColumn = amountIndex;
-            else if (j == remarkIndex) headerIndexForColumn = remarkIndex;
+        
+        // 定义所有列的顺序，确保按正确的顺序检查前面的列
+        int[] columnOrder = {dateIndex, styleNumberIndex, nameIndex, 
+                              quantityIndex, unitPriceIndex, amountIndex, remarkIndex};
+        
+        // 遍历所有列，找到当前列之前的列
+        for (int currentColumn : columnOrder) {
+            // 如果当前列是我们要计算偏移量的列，停止遍历
+            if (currentColumn == columnIndex) {
+                break;
+            }
             
-            if (headerIndexForColumn != -1) {
-                // 计算前面列的偏移量
-                int prevOffset = calculateOffset(headerIndexForColumn, data, 
-                                                   dateIndex, styleNumberIndex, nameIndex, 
-                                                   quantityIndex, unitPriceIndex, amountIndex, remarkIndex);
-                int adjustedPrevIndex = headerIndexForColumn - prevOffset;
+            // 如果当前列在表头中存在
+            if (currentColumn != -1) {
+                // 计算当前列的实际数据索引（考虑前面的偏移量）
+                int actualIndex = currentColumn - offset;
                 
-                if (adjustedPrevIndex >= 0 && adjustedPrevIndex < data.length) {
-                    if (data[adjustedPrevIndex].trim().isEmpty()) {
-                        offset++;
-                    }
-                } else {
+                // 检查实际索引是否有效，并且数据是否为空
+                if (actualIndex < 0 || actualIndex >= data.length || 
+                    data[actualIndex].trim().isEmpty()) {
+                    // 如果是空值或索引无效，说明有单元格合并，增加偏移量
                     offset++;
                 }
             }
         }
+        
         return offset;
     }
 
@@ -525,7 +523,7 @@ public class PdfParserService {
         // 这里假设如果数量或金额为负数，则为退货
         if ((inventory.getQuantity() != null && inventory.getQuantity() < 0) ||
                 (inventory.getAmount() != null && inventory.getAmount() < 0)) {
-            inventory.setReturn(true);
+            inventory.setReturned(true);
             // 将负数转换为正数存储
             if (inventory.getQuantity() != null) {
                 inventory.setQuantity(Math.abs(inventory.getQuantity()));
@@ -534,7 +532,7 @@ public class PdfParserService {
                 inventory.setAmount(Math.abs(inventory.getAmount()));
             }
         } else {
-            inventory.setReturn(false);
+            inventory.setReturned(false);
         }
     }
 }

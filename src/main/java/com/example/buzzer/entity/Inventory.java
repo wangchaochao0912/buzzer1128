@@ -18,7 +18,7 @@ public class Inventory {
     private Double unitPrice;
     private Double amount;
     private String remark;
-    private Boolean isReturn;
+    private Boolean isReturned; 
 
     // Getters and Setters
     public Long getId() {
@@ -85,11 +85,11 @@ public class Inventory {
         this.remark = remark;
     }
 
-    public Boolean getReturn() {
-        return isReturn;
+    public Boolean getReturned() {
+        return isReturned; 
     }
 
-    public void setReturn(Boolean aReturn) {
-        isReturn = aReturn;
+    public void setReturned(Boolean returned) {
+        isReturned = returned;
     }
 }
