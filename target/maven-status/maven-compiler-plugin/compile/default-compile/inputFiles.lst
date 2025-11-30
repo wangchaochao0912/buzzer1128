@@ -1,2 +1,7 @@
-G:\buzzer1128\src\main\java\com\example\buzzer\controller\HelloController.java
-G:\buzzer1128\src\main\java\com\example\buzzer\BuzzerApplication.java
+/Users/wangchaochao/workspace/github/trae_04/buzzer1128/src/main/java/com/example/buzzer/controller/HelloController.java
+/Users/wangchaochao/workspace/github/trae_04/buzzer1128/src/main/java/com/example/buzzer/service/PdfParserService.java
+/Users/wangchaochao/workspace/github/trae_04/buzzer1128/src/main/java/com/example/buzzer/BuzzerApplication.java
+/Users/wangchaochao/workspace/github/trae_04/buzzer1128/src/main/java/com/example/buzzer/entity/Inventory.java
+/Users/wangchaochao/workspace/github/trae_04/buzzer1128/src/main/java/com/example/buzzer/controller/InventoryController.java
+/Users/wangchaochao/workspace/github/trae_04/buzzer1128/src/main/java/com/example/buzzer/repository/InventoryRepository.java
+/Users/wangchaochao/workspace/github/trae_04/buzzer1128/src/main/java/com/example/buzzer/service/InventoryService.java
