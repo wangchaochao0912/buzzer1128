@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trae AI数据</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/v4-shims.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        neutral: '#F3F4F6',
+                        'neutral-dark': '#6B7280'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <h1 class="text-2xl font-bold text-primary">Trae AI数据</h1>
+            <div class="mt-2 flex flex-wrap gap-4 text-sm text-neutral-dark">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-user text-primary"></i>
+                    <span>用户id：1875084792839892</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-id-card text-primary"></i>
+                    <span>千识id：4771</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Search Section -->
+        <section class="bg-white rounded-xl p-6 mb-6 card-shadow">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <i class="fas fa-filter text-primary"></i>
+                查询条件
+            </h2>
+            
+            <form id="searchForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">名称模糊查询</label>
+                    <input type="text" id="searchName" placeholder="请输入名称" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+                    <input type="date" id="startDate" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+                    <input type="date" id="endDate" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                    <select id="searchStatus" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                        <option value="">全部</option>
+                        <option value="审核中">审核中</option>
+                        <option value="已通过">已通过</option>
+                        <option value="未通过">未通过</option>
+                    </select>
+                </div>
+            </form>
+            
+            <div class="mt-4 flex justify-end gap-3">
+                <button id="resetBtn" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2">
+                    <i class="fas fa-redo"></i>
+                    重置
+                </button>
+                <button id="searchBtn" 
+                        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all flex items-center gap-2">
+                    <i class="fas fa-search"></i>
+                    查询
+                </button>
+                <button id="addBtn" 
+                        class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-all flex items-center gap-2">
+                    <i class="fas fa-plus"></i>
+                    新增
+                </button>
+            </div>
+        </section>
+
+        <!-- Table Section -->
+        <section class="bg-white rounded-xl p-6 card-shadow">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ID
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                名称
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                创建时间
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                修改时间
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                状态
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                操作
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="text-sm text-gray-700">
+                    显示第 <span id="startItem">0</span> 至 <span id="endItem">0</span> 条，
+                    共 <span id="totalItems">0</span> 条记录
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prevPage" disabled 
+                            class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        上一页
+                    </button>
+                    <div id="pageNumbers" class="flex items-center gap-1">
+                        <!-- Page numbers will be inserted here -->
+                    </div>
+                    <button id="nextPage" disabled 
+                            class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        下一页
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Add/Edit/Detail -->
+    <div id="dataModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <h3 id="modalTitle" class="text-xl font-semibold">数据详情</h3>
+            </div>
+            
+            <form id="dataForm" class="p-6 space-y-4">
+                <input type="hidden" id="modalId">
+                <input type="hidden" id="modalMode" value="detail">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">名称</label>
+                    <input type="text" id="formName" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">仓库</label>
+                    <input type="text" id="formRepo" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">简介</label>
+                    <textarea id="formDesc" rows="3" placeholder="请输入简介" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                    <select id="formStatus" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                        <option value="审核中">审核中</option>
+                        <option value="已通过">已通过</option>
+                        <option value="未通过">未通过</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Session IDs</label>
+                        <button type="button" id="addSessionId" 
+                                class="px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-all flex items-center gap-1">
+                            <i class="fas fa-plus"></i>
+                            添加
+                        </button>
+                    </div>
+                    <div id="sessionIdsContainer" class="space-y-2">
+                        <!-- Session ID inputs will be inserted here -->
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">PRs</label>
+                        <button type="button" id="addPr" 
+                                class="px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-all flex items-center gap-1">
+                            <i class="fas fa-plus"></i>
+                            添加
+                        </button>
+                    </div>
+                    <div id="prsContainer" class="space-y-2">
+                        <!-- PR inputs will be inserted here -->
+                    </div>
+                </div>
+            </form>
+            
+            <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+                <button id="closeModal" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all">
+                    关闭
+                </button>
+                <button id="deleteBtn" style="display:none;" 
+                        class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all flex items-center gap-2">
+                    <i class="fas fa-trash"></i>
+                    删除
+                </button>
+                <button id="saveBtn" style="display:none;" 
+                        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all flex items-center gap-2">
+                    <i class="fas fa-save"></i>
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data
+        let mockData = [
+            {
+                id: 1,
+                name: "Trae AI 智能助手",
+                repo: "trae-ai/assistant",
+                desc: "基于人工智能的代码助手，帮助开发者提高编程效率",
+                status: "已通过",
+                sessionIds: ["session_001", "session_002"],
+                prs: ["PR-123", "PR-456"],
+                createTime: "2024-01-15 10:30:00",
+                updateTime: "2024-01-16 14:20:00"
+            },
+            {
+                id: 2,
+                name: "数据可视化平台",
+                repo: "trae-ai/visualization",
+                desc: "实时数据可视化平台，支持多种图表类型",
+                status: "审核中",
+                sessionIds: ["session_003"],
+                prs: ["PR-789"],
+                createTime: "2024-01-17 09:15:00",
+                updateTime: "2024-01-17 09:15:00"
+            },
+            {
+                id: 3,
+                name: "自动化测试工具",
+                repo: "trae-ai/auto-test",
+                desc: "端到端自动化测试工具，支持多种浏览器",
+                status: "未通过",
+                sessionIds: ["session_004", "session_005", "session_006"],
+                prs: ["PR-101", "PR-102"],
+                createTime: "2024-01-18 16:45:00",
+                updateTime: "2024-01-19 11:30:00"
+            },
+            {
+                id: 4,
+                name: "代码质量分析工具",
+                repo: "trae-ai/code-quality",
+                desc: "静态代码分析工具，检测代码中的潜在问题",
+                status: "已通过",
+                sessionIds: ["session_007"],
+                prs: ["PR-103", "PR-104", "PR-105"],
+                createTime: "2024-01-20 13:20:00",
+                updateTime: "2024-01-21 08:45:00"
+            },
+            {
+                id: 5,
+                name: "文档生成系统",
+                repo: "trae-ai/doc-generator",
+                desc: "自动生成项目文档，支持多种格式输出",
+                status: "审核中",
+                sessionIds: ["session_008", "session_009"],
+                prs: ["PR-106"],
+                createTime: "2024-01-22 15:10:00",
+                updateTime: "2024-01-22 15:10:00"
+            }
+        ];
+
+        // Pagination variables
+        let currentPage = 1;
+        let pageSize = 10;
+        let filteredData = [...mockData];
+
+        // Initialize the page
+        function init() {
+            renderTable();
+            renderPagination();
+            bindEvents();
+        }
+
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, filteredData.length);
+            const pageData = filteredData.slice(start, end);
+
+            tbody.innerHTML = pageData.map(item => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.createTime}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.updateTime}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            item.status === '已通过' ? 'bg-green-100 text-green-800' :
+                            item.status === '审核中' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                        }">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewDetail(${item.id})" class="text-primary hover:text-primary/80 mr-3">
+                            <i class="fas fa-eye"></i> 详情
+                        </button>
+                        <button onclick="editData(${item.id})" class="text-secondary hover:text-secondary/80 mr-3">
+                            <i class="fas fa-edit"></i> 编辑
+                        </button>
+                        <button onclick="deleteData(${item.id})" class="text-red-500 hover:text-red-600">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Update pagination info
+            document.getElementById('startItem').textContent = filteredData.length > 0 ? start + 1 : 0;
+            document.getElementById('endItem').textContent = end;
+            document.getElementById('totalItems').textContent = filteredData.length;
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            const pageNumbers = document.getElementById('pageNumbers');
+            const prevPage = document.getElementById('prevPage');
+            const nextPage = document.getElementById('nextPage');
+
+            // Update prev/next buttons
+            prevPage.disabled = currentPage === 1;
+            nextPage.disabled = currentPage === totalPages || totalPages === 0;
+
+            // Render page numbers
+            let pagesHTML = '';
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                pagesHTML += `<button onclick="goToPage(1)" class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 transition-all">1</button>`;
+                if (startPage > 2) {
+                    pagesHTML += `<span class="px-2 py-1 text-sm text-gray-500">...</span>`;
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagesHTML += `<button onclick="goToPage(${i})" class="px-3 py-1 border border-gray-300 rounded text-sm ${i === currentPage ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-50'} transition-all">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pagesHTML += `<span class="px-2 py-1 text-sm text-gray-500">...</span>`;
+                }
+                pagesHTML += `<button onclick="goToPage(${totalPages})" class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 transition-all">${totalPages}</button>`;
+            }
+
+            pageNumbers.innerHTML = pagesHTML;
+        }
+
+        // Go to specific page
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+            renderPagination();
+        }
+
+        // View detail
+        function viewDetail(id) {
+            const data = mockData.find(item => item.id === id);
+            if (!data) return;
+
+            openModal('detail', data);
+        }
+
+        // Edit data
+        function editData(id) {
+            const data = mockData.find(item => item.id === id);
+            if (!data) return;
+
+            openModal('edit', data);
+        }
+
+        // Delete data
+        function deleteData(id) {
+            if (!confirm('确定要删除这条数据吗？')) return;
+
+            mockData = mockData.filter(item => item.id !== id);
+            filterData();
+        }
+
+        // Open modal
+        function openModal(mode, data = null) {
+            const modal = document.getElementById('dataModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMode = document.getElementById('modalMode');
+            const modalId = document.getElementById('modalId');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const saveBtn = document.getElementById('saveBtn');
+
+            // Set modal mode and title
+            modalMode.value = mode;
+            if (mode === 'detail') {
+                modalTitle.textContent = '数据详情';
+                deleteBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                setFormDisabled(true);
+            } else if (mode === 'edit') {
+                modalTitle.textContent = '修改数据';
+                deleteBtn.style.display = 'inline-flex';
+                saveBtn.style.display = 'inline-flex';
+                setFormDisabled(false);
+            } else if (mode === 'add') {
+                modalTitle.textContent = '新增数据';
+                deleteBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-flex';
+                setFormDisabled(false);
+            }
+
+            // Fill form data
+            if (data) {
+                modalId.value = data.id;
+                document.getElementById('formName').value = data.name;
+                document.getElementById('formRepo').value = data.repo;
+                document.getElementById('formDesc').value = data.desc;
+                document.getElementById('formStatus').value = data.status;
+
+                // Fill sessionIds
+                const sessionIdsContainer = document.getElementById('sessionIdsContainer');
+                sessionIdsContainer.innerHTML = '';
+                data.sessionIds.forEach((sessionId, index) => {
+                    addSessionIdInput(sessionId, index);
+                });
+                if (data.sessionIds.length === 0) {
+                    addSessionIdInput('');
+                }
+
+                // Fill PRs
+                const prsContainer = document.getElementById('prsContainer');
+                prsContainer.innerHTML = '';
+                data.prs.forEach((pr, index) => {
+                    addPrInput(pr, index);
+                });
+                if (data.prs.length === 0) {
+                    addPrInput('');
+                }
+            } else {
+                // Clear form for add mode
+                document.getElementById('dataForm').reset();
+                modalId.value = '';
+                const sessionIdsContainer = document.getElementById('sessionIdsContainer');
+                const prsContainer = document.getElementById('prsContainer');
+                sessionIdsContainer.innerHTML = '';
+                prsContainer.innerHTML = '';
+                addSessionIdInput('');
+                addPrInput('');
+            }
+
+            // Show modal
+            modal.classList.remove('hidden');
+        }
+
+        // Set form fields disabled state
+        function setFormDisabled(disabled) {
+            const inputs = document.querySelectorAll('#dataForm input, #dataForm select, #dataForm textarea');
+            inputs.forEach(input => {
+                input.disabled = disabled;
+                if (disabled) {
+                    input.classList.add('bg-gray-50');
+                } else {
+                    input.classList.remove('bg-gray-50');
+                }
+            });
+
+            // Hide add buttons in detail mode
+            document.getElementById('addSessionId').style.display = disabled ? 'none' : 'inline-flex';
+            document.getElementById('addPr').style.display = disabled ? 'none' : 'inline-flex';
+
+            // Hide remove buttons in detail mode
+            const removeButtons = document.querySelectorAll('.remove-input');
+            removeButtons.forEach(btn => {
+                btn.style.display = disabled ? 'none' : 'inline-flex';
+            });
+        }
+
+        // Add session ID input
+        function addSessionIdInput(value = '', index = null) {
+            const container = document.getElementById('sessionIdsContainer');
+            const inputIndex = index !== null ? index : container.children.length;
+            const inputDiv = document.createElement('div');
+            inputDiv.className = 'flex items-center gap-2';
+            inputDiv.innerHTML = `
+                <input type="text" value="${value}" placeholder="请输入Session ID" 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                <button type="button" onclick="removeInput(this, 'sessionIdsContainer')" 
+                        class="remove-input px-2 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(inputDiv);
+        }
+
+        // Add PR input
+        function addPrInput(value = '', index = null) {
+            const container = document.getElementById('prsContainer');
+            const inputIndex = index !== null ? index : container.children.length;
+            const inputDiv = document.createElement('div');
+            inputDiv.className = 'flex items-center gap-2';
+            inputDiv.innerHTML = `
+                <input type="text" value="${value}" placeholder="请输入PR号" 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg input-focus transition-all">
+                <button type="button" onclick="removeInput(this, 'prsContainer')" 
+                        class="remove-input px-2 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(inputDiv);
+        }
+
+        // Remove input
+        function removeInput(button, containerId) {
+            const container = document.getElementById(containerId);
+            const inputDiv = button.closest('div');
+            container.removeChild(inputDiv);
+
+            // If no inputs left, add one
+            if (container.children.length === 0) {
+                if (containerId === 'sessionIdsContainer') {
+                    addSessionIdInput('');
+                } else if (containerId === 'prsContainer') {
+                    addPrInput('');
+                }
+            }
+        }
+
+        // Filter data
+        function filterData() {
+            const name = document.getElementById('searchName').value.toLowerCase();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const status = document.getElementById('searchStatus').value;
+
+            filteredData = mockData.filter(item => {
+                // Name filter
+                if (name && !item.name.toLowerCase().includes(name)) {
+                    return false;
+                }
+
+                // Date filter
+                if (startDate) {
+                    const itemDate = new Date(item.createTime.split(' ')[0]);
+                    const filterStartDate = new Date(startDate);
+                    if (itemDate < filterStartDate) {
+                        return false;
+                    }
+                }
+
+                if (endDate) {
+                    const itemDate = new Date(item.createTime.split(' ')[0]);
+                    const filterEndDate = new Date(endDate);
+                    if (itemDate > filterEndDate) {
+                        return false;
+                    }
+                }
+
+                // Status filter
+                if (status && item.status !== status) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        // Save data
+        function saveData() {
+            const mode = document.getElementById('modalMode').value;
+            const id = document.getElementById('modalId').value;
+            const name = document.getElementById('formName').value;
+            const repo = document.getElementById('formRepo').value;
+            const desc = document.getElementById('formDesc').value;
+            const status = document.getElementById('formStatus').value;
+
+            // Get sessionIds
+            const sessionIdInputs = document.querySelectorAll('#sessionIdsContainer input');
+            const sessionIds = Array.from(sessionIdInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            // Get PRs
+            const prInputs = document.querySelectorAll('#prsContainer input');
+            const prs = Array.from(prInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            // Validate form
+            if (!name || !repo) {
+                alert('名称和仓库不能为空');
+                return;
+            }
+
+            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+            if (mode === 'add') {
+                // Add new data
+                const newId = Math.max(...mockData.map(item => item.id), 0) + 1;
+                const newData = {
+                    id: newId,
+                    name,
+                    repo,
+                    desc,
+                    status,
+                    sessionIds,
+                    prs,
+                    createTime: now,
+                    updateTime: now
+                };
+                mockData.push(newData);
+            } else if (mode === 'edit') {
+                // Update existing data
+                const dataIndex = mockData.findIndex(item => item.id === parseInt(id));
+                if (dataIndex !== -1) {
+                    mockData[dataIndex] = {
+                        ...mockData[dataIndex],
+                        name,
+                        repo,
+                        desc,
+                        status,
+                        sessionIds,
+                        prs,
+                        updateTime: now
+                    };
+                }
+            }
+
+            // Close modal and refresh data
+            closeModal();
+            filterData();
+        }
+
+        // Close modal
+        function closeModal() {
+            const modal = document.getElementById('dataModal');
+            modal.classList.add('hidden');
+        }
+
+        // Bind events
+        function bindEvents() {
+            // Search button
+            document.getElementById('searchBtn').addEventListener('click', filterData);
+
+            // Reset button
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                document.getElementById('searchForm').reset();
+                filterData();
+            });
+
+            // Add button
+            document.getElementById('addBtn').addEventListener('click', () => {
+                openModal('add');
+            });
+
+            // Close modal button
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+
+            // Save button
+            document.getElementById('saveBtn').addEventListener('click', saveData);
+
+            // Delete button in modal
+            document.getElementById('deleteBtn').addEventListener('click', () => {
+                const id = document.getElementById('modalId').value;
+                deleteData(parseInt(id));
+            });
+
+            // Add session ID button
+            document.getElementById('addSessionId').addEventListener('click', () => {
+                addSessionIdInput('');
+            });
+
+            // Add PR button
+            document.getElementById('addPr').addEventListener('click', () => {
+                addPrInput('');
+            });
+
+            // Prev page button
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    goToPage(currentPage - 1);
+                }
+            });
+
+            // Next page button
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredData.length / pageSize);
+                if (currentPage < totalPages) {
+                    goToPage(currentPage + 1);
+                }
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('dataModal').addEventListener('click', (e) => {
+                if (e.target.id === 'dataModal') {
+                    closeModal();
+                }
+            });
+        }
+
+        // Initialize the page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
