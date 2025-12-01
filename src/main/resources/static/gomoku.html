@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>五子棋游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        .game-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 0;
+            border: 2px solid #333;
+            margin: 20px 0;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+        }
+        .cell:hover:not(.disabled) {
+            background-color: #e9e9e9;
+        }
+        .cell.disabled {
+            cursor: default;
+        }
+        .stone {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+        .black {
+            background-color: #000;
+        }
+        .white {
+            background-color: #fff;
+            border: 1px solid #000;
+        }
+        .info {
+            margin: 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button#exit {
+            background-color: #f44336;
+        }
+        button#exit:hover {
+            background-color: #da190b;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>五子棋游戏</h1>
+    <div class="game-container">
+        <div id="info" class="info">请点击开始游戏</div>
+        
+        <div class="board">
+            <!-- 棋盘将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="buttons">
+            <button id="start" onclick="startGame()">开始游戏</button>
+            <button id="exit" onclick="exitGame()" disabled>退出游戏</button>
+        </div>
+        
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        // 游戏状态变量
+        let board = [];
+        let gameStarted = false;
+        let currentPlayer = 'black';
+        let gameOver = false;
+        
+        // 初始化棋盘
+        function initBoard() {
+            board = Array(15).fill().map(() => Array(15).fill(null));
+            const boardElement = document.querySelector('.board');
+            boardElement.innerHTML = '';
+            
+            for (let row = 0; row < 15; row++) {
+                for (let col = 0; col < 15; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell disabled';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('click', handleCellClick);
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+        
+        // 处理棋盘点击
+        function handleCellClick(event) {
+            if (!gameStarted || gameOver) return;
+            
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            
+            if (board[row][col] !== null) return;
+            
+            // 放置棋子
+            placeStone(row, col);
+            
+            // 检查胜负
+            if (checkWin(row, col)) {
+                gameOver = true;
+                document.getElementById('info').textContent = `游戏结束！玩家 ${currentPlayer === 'black' ? '黑' : '白'} 获胜！`;
+                document.getElementById('message').textContent = `恭喜！${currentPlayer === 'black' ? '黑' : '白'}方获胜！`;
+                disableBoard();
+            } else {
+                // 切换玩家
+                currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
+                document.getElementById('info').textContent = `当前玩家: ${currentPlayer === 'black' ? '黑' : '白'}`;
+            }
+        }
+        
+        // 放置棋子
+        function placeStone(row, col) {
+            board[row][col] = currentPlayer;
+            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+            const stone = document.createElement('div');
+            stone.className = `stone ${currentPlayer}`;
+            cell.appendChild(stone);
+        }
+        
+        // 禁用棋盘
+        function disableBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.add('disabled');
+            });
+        }
+        
+        // 启用棋盘
+        function enableBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.remove('disabled');
+            });
+        }
+        
+        // 检查胜负
+        function checkWin(row, col) {
+            const player = board[row][col];
+            
+            // 检查水平方向
+            let count = 1;
+            for (let c = col - 1; c >= 0 && board[row][c] === player; c--) {
+                count++;
+            }
+            for (let c = col + 1; c < 15 && board[row][c] === player; c++) {
+                count++;
+            }
+            if (count >= 5) return true;
+
+            // 检查垂直方向
+            count = 1;
+            for (let r = row - 1; r >= 0 && board[r][col] === player; r--) {
+                count++;
+            }
+            for (let r = row + 1; r < 15 && board[r][col] === player; r++) {
+                count++;
+            }
+            if (count >= 5) return true;
+
+            // 检查对角线方向（左上到右下）
+            count = 1;
+            for (let r = row - 1, c = col - 1; r >= 0 && c >= 0 && board[r][c] === player; r--, c--) {
+                count++;
+            }
+            for (let r = row + 1, c = col + 1; r < 15 && c < 15 && board[r][c] === player; r++, c++) {
+                count++;
+            }
+            if (count >= 5) return true;
+
+            // 检查对角线方向（右上到左下）
+            count = 1;
+            for (let r = row - 1, c = col + 1; r >= 0 && c < 15 && board[r][c] === player; r--, c++) {
+                count++;
+            }
+            for (let r = row + 1, c = col - 1; r < 15 && c >= 0 && board[r][c] === player; r++, c--) {
+                count++;
+            }
+            if (count >= 5) return true;
+
+            return false;
+        }
+        
+        // 开始游戏
+        function startGame() {
+            initBoard();
+            gameStarted = true;
+            gameOver = false;
+            currentPlayer = 'black';
+            enableBoard();
+            document.getElementById('info').textContent = '当前玩家: 黑';
+            document.getElementById('message').textContent = '';
+            document.getElementById('start').disabled = true;
+            document.getElementById('exit').disabled = false;
+        }
+        
+        // 退出游戏
+        function exitGame() {
+            gameStarted = false;
+            gameOver = false;
+            initBoard();
+            document.getElementById('info').textContent = '请点击开始游戏';
+            document.getElementById('message').textContent = '';
+            document.getElementById('start').disabled = false;
+            document.getElementById('exit').disabled = true;
+        }
+        
+        // 页面加载时初始化
+        window.onload = initBoard;
+    </script>
+</body>
+</html>

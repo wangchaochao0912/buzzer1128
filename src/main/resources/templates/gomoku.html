@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>五子棋游戏 - 双棋盘模式</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        .game-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+        .boards-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .board-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 0;
+            border: 2px solid #333;
+            margin: 20px 0;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+        }
+        .cell:hover:not(.disabled) {
+            background-color: #e9e9e9;
+        }
+        .cell.disabled {
+            cursor: default;
+        }
+        .stone {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+        .black {
+            background-color: #000;
+        }
+        .white {
+            background-color: #fff;
+            border: 1px solid #000;
+        }
+        .info {
+            margin: 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button#exit {
+            background-color: #f44336;
+        }
+        button#exit:hover {
+            background-color: #da190b;
+        }
+        .message {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #f44336;
+        }
+        .rule {
+            margin: 10px 0;
+            font-size: 16px;
+            color: #ff9800;
+            font-weight: bold;
+            text-align: center;
+        }
+        .special-message {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #e91e63;
+            font-weight: bold;
+            animation: pulse 1s infinite alternate;
+            text-align: center;
+            max-width: 300px;
+        }
+        @keyframes pulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        .board-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .total-victory-message {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 20px 0;
+            text-align: center;
+            animation: victory-blink 1s infinite;
+        }
+        @keyframes victory-blink {
+            0%, 50% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+        .game-rules {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff8e1;
+            border-radius: 5px;
+            border-left: 5px solid #ffc107;
+            width: 100%;
+            max-width: 900px;
+        }
+        .game-rules h3 {
+            margin-top: 0;
+            color: #ff6f00;
+        }
+        .game-rules ul {
+            text-align: left;
+        }
+        .game-rules li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>五子棋游戏 - 双棋盘模式</h1>
+    <div class="game-container">
+        <!-- 总胜利消息 -->
+        <div class="total-victory-message" th:if="${totalVictory}">恭喜！双盘都胜利了！</div>
+        
+        <!-- 游戏规则说明 -->
+        <div class="game-rules" th:if="${!gameStarted1}">
+            <h3>游戏规则</h3>
+            <ul>
+                <li>同时进行两个棋盘的游戏</li>
+                <li>只有当两个棋盘都胜利时，才视为总胜利</li>
+                <li>每个棋盘独立进行，都有自己的回合和状态</li>
+                <li>特殊规则：每方每走3步，随机将对方的一个棋子变为自己的颜色</li>
+                <li>点击棋盘上的空位放置棋子</li>
+            </ul>
+        </div>
+        
+        <!-- 两个棋盘容器 -->
+        <div class="boards-container" th:if="${gameStarted1 || gameStarted2}">
+            <!-- 棋盘1 -->
+            <div class="board-wrapper">
+                <div class="board-title">棋盘 1</div>
+                <div class="info" th:text="${gameStarted1 ? (gameOver1 ? '游戏结束！玩家 ' + (currentPlayer1 == 'black' ? '黑' : '白') + ' 获胜！' : '当前玩家: ' + (currentPlayer1 == 'black' ? '黑' : '白') + ' (黑方步数: ' + blackMoves1 + ', 白方步数: ' + whiteMoves1 + ')') : '游戏未开始'}"></div>
+                <div class="special-message" th:if="${lastSpecialMoveMessage1}" th:text="${lastSpecialMoveMessage1}"></div>
+                
+                <div class="board">
+                    <th:block th:each="row, rowStat : ${board1}">
+                        <th:block th:each="cell, colStat : ${row}">
+                            <div class="cell" th:classappend="${!gameStarted1 || gameOver1 || totalVictory ? 'disabled' : ''}"
+                                 th:onclick="${gameStarted1 && !gameOver1 && !totalVictory && cell == null ? 'javascript:placeStone(' + rowStat.index + ',' + colStat.index + ', 1)' : ''}">
+                                <div th:if="${cell == 'black'}" class="stone black"></div>
+                                <div th:if="${cell == 'white'}" class="stone white"></div>
+                            </div>
+                        </th:block>
+                    </th:block>
+                </div>
+            </div>
+            
+            <!-- 棋盘2 -->
+            <div class="board-wrapper">
+                <div class="board-title">棋盘 2</div>
+                <div class="info" th:text="${gameStarted2 ? (gameOver2 ? '游戏结束！玩家 ' + (currentPlayer2 == 'black' ? '黑' : '白') + ' 获胜！' : '当前玩家: ' + (currentPlayer2 == 'black' ? '黑' : '白') + ' (黑方步数: ' + blackMoves2 + ', 白方步数: ' + whiteMoves2 + ')') : '游戏未开始'}"></div>
+                <div class="special-message" th:if="${lastSpecialMoveMessage2}" th:text="${lastSpecialMoveMessage2}"></div>
+                
+                <div class="board">
+                    <th:block th:each="row, rowStat : ${board2}">
+                        <th:block th:each="cell, colStat : ${row}">
+                            <div class="cell" th:classappend="${!gameStarted2 || gameOver2 || totalVictory ? 'disabled' : ''}"
+                                 th:onclick="${gameStarted2 && !gameOver2 && !totalVictory && cell == null ? 'javascript:placeStone(' + rowStat.index + ',' + colStat.index + ', 2)' : ''}">
+                                <div th:if="${cell == 'black'}" class="stone black"></div>
+                                <div th:if="${cell == 'white'}" class="stone white"></div>
+                            </div>
+                        </th:block>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="buttons">
+            <form method="post" action="/start-game">
+                <button type="submit" th:disabled="${gameStarted1 || totalVictory}">开始游戏</button>
+            </form>
+            <form method="post" action="/exit-game">
+                <button id="exit" type="submit" th:disabled="${!gameStarted1 && !gameStarted2}">退出游戏</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function placeStone(row, col, boardNum) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '/place-stone';
+            
+            const rowInput = document.createElement('input');
+            rowInput.type = 'hidden';
+            rowInput.name = 'row';
+            rowInput.value = row;
+            
+            const colInput = document.createElement('input');
+            colInput.type = 'hidden';
+            colInput.name = 'col';
+            colInput.value = col;
+            
+            const boardNumInput = document.createElement('input');
+            boardNumInput.type = 'hidden';
+            boardNumInput.name = 'boardNum';
+            boardNumInput.value = boardNum;
+            
+            form.appendChild(rowInput);
+            form.appendChild(colInput);
+            form.appendChild(boardNumInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</body>
+</html>
