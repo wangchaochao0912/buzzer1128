@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双棋盘五子棋游戏</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .overall-status {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .games-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .game-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .game-board {
+            display: inline-block;
+            background-color: #deb887;
+            border: 2px solid #8b4513;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .board-row {
+            display: flex;
+        }
+
+        .board-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #8b4513;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #deb887;
+        }
+
+        .board-cell:hover {
+            background-color: #d2b48c;
+        }
+
+        .board-cell.black {
+            background-color: #000;
+            border-radius: 50%;
+        }
+
+        .board-cell.white {
+            background-color: #fff;
+            border-radius: 50%;
+        }
+
+        .game-info {
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .game-status {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-start {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background-color: #45a049;
+        }
+
+        .btn-exit {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-exit:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <h1>双棋盘五子棋游戏</h1>
+    
+    <div class="overall-status" id="overallStatus">
+        整体状态：等待开始游戏
+    </div>
+
+    <div class="games-container">
+        <!-- 第一个棋盘 -->
+        <div class="game-container">
+            <div class="game-title">棋盘 1</div>
+            <div class="game-status" id="game1Status">状态：未开始</div>
+            <div class="game-info">
+                <span id="currentPlayer1">当前玩家：黑棋</span>
+            </div>
+            
+            <div class="game-board" id="gameBoard1"></div>
+            
+            <div class="game-controls">
+                <button class="btn btn-start" onclick="startGame(1)">开始游戏</button>
+                <button class="btn btn-exit" onclick="exitGame(1)">退出游戏</button>
+            </div>
+        </div>
+
+        <!-- 第二个棋盘 -->
+        <div class="game-container">
+            <div class="game-title">棋盘 2</div>
+            <div class="game-status" id="game2Status">状态：未开始</div>
+            <div class="game-info">
+                <span id="currentPlayer2">当前玩家：黑棋</span>
+            </div>
+            
+            <div class="game-board" id="gameBoard2"></div>
+            
+            <div class="game-controls">
+                <button class="btn btn-start" onclick="startGame(2)">开始游戏</button>
+                <button class="btn btn-exit" onclick="exitGame(2)">退出游戏</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-controls">
+        <button class="btn btn-start" onclick="startAllGames()">开始所有游戏</button>
+        <button class="btn btn-exit" onclick="exitAllGames()">退出所有游戏</button>
+    </div>
+
+    <script>
+        const BOARD_SIZE = 15;
+        
+        // 游戏状态管理
+        let games = {
+            1: {
+                board: [],
+                currentPlayer: 'black',
+                gameStarted: false,
+                gameWon: false,
+                blackMoveCount: 0,
+                whiteMoveCount: 0
+            },
+            2: {
+                board: [],
+                currentPlayer: 'black',
+                gameStarted: false,
+                gameWon: false,
+                blackMoveCount: 0,
+                whiteMoveCount: 0
+            }
+        };
+
+        // 初始化棋盘
+        function initBoard(gameId) {
+            const gameBoard = document.getElementById(`gameBoard${gameId}`);
+            gameBoard.innerHTML = '';
+            games[gameId].board = [];
+
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                games[gameId].board[i] = [];
+                const row = document.createElement('div');
+                row.className = 'board-row';
+
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    games[gameId].board[i][j] = '';
+                    const cell = document.createElement('div');
+                    cell.className = 'board-cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.onclick = () => makeMove(gameId, i, j);
+                    row.appendChild(cell);
+                }
+
+                gameBoard.appendChild(row);
+            }
+        }
+
+        // 开始单个游戏
+        function startGame(gameId) {
+            games[gameId].gameStarted = true;
+            games[gameId].currentPlayer = 'black';
+            games[gameId].gameWon = false;
+            games[gameId].blackMoveCount = 0;
+            games[gameId].whiteMoveCount = 0;
+            
+            document.getElementById(`currentPlayer${gameId}`).textContent = '当前玩家：黑棋';
+            document.getElementById(`game${gameId}Status`).textContent = '状态：进行中';
+            
+            initBoard(gameId);
+            updateOverallStatus();
+        }
+
+        // 开始所有游戏
+        function startAllGames() {
+            startGame(1);
+            startGame(2);
+            alert('所有游戏开始！黑棋先行。');
+        }
+
+        // 退出单个游戏
+        function exitGame(gameId) {
+            if (confirm(`确定要退出棋盘 ${gameId} 的游戏吗？`)) {
+                games[gameId].gameStarted = false;
+                games[gameId].gameWon = false;
+                
+                document.getElementById(`gameBoard${gameId}`).innerHTML = '';
+                document.getElementById(`currentPlayer${gameId}`).textContent = '当前玩家：黑棋';
+                document.getElementById(`game${gameId}Status`).textContent = '状态：未开始';
+                
+                updateOverallStatus();
+            }
+        }
+
+        // 退出所有游戏
+        function exitAllGames() {
+            if (confirm('确定要退出所有游戏吗？')) {
+                exitGame(1);
+                exitGame(2);
+            }
+        }
+
+        // 落子
+        function makeMove(gameId, row, col) {
+            const game = games[gameId];
+            
+            if (!game.gameStarted) {
+                alert(`请先点击棋盘 ${gameId} 的"开始游戏"按钮！`);
+                return;
+            }
+
+            if (game.board[row][col] !== '') {
+                alert('此位置已有棋子，请选择其他位置！');
+                return;
+            }
+
+            if (game.gameWon) {
+                alert(`棋盘 ${gameId} 的游戏已结束！`);
+                return;
+            }
+
+            // 放置棋子
+            game.board[row][col] = game.currentPlayer;
+            const cell = document.querySelector(`#gameBoard${gameId} [data-row="${row}"][data-col="${col}"]`);
+            cell.classList.add(game.currentPlayer);
+
+            // 增加步数计数
+            if (game.currentPlayer === 'black') {
+                game.blackMoveCount++;
+                
+                // 每走3步，随机将一个黑棋变为白棋
+                if (game.blackMoveCount % 3 === 0) {
+                    convertRandomPiece(gameId, 'black', 'white');
+                }
+            } else {
+                game.whiteMoveCount++;
+                
+                // 每走3步，随机将一个白棋变为黑棋
+                if (game.whiteMoveCount % 3 === 0) {
+                    convertRandomPiece(gameId, 'white', 'black');
+                }
+            }
+
+            // 检查是否获胜
+            if (checkWin(gameId, row, col)) {
+                game.gameWon = true;
+                document.getElementById(`game${gameId}Status`).textContent = `状态：${game.currentPlayer === 'black' ? '黑棋' : '白棋'}获胜`;
+                alert(`棋盘 ${gameId}：${game.currentPlayer === 'black' ? '黑棋' : '白棋'}获胜！`);
+                
+                // 检查是否两个棋盘都获胜
+                checkOverallWin();
+                return;
+            }
+
+            // 检查是否平局
+            if (checkDraw(gameId)) {
+                alert(`棋盘 ${gameId}：平局！`);
+                game.gameStarted = false;
+                document.getElementById(`game${gameId}Status`).textContent = '状态：平局';
+                updateOverallStatus();
+                return;
+            }
+
+            // 切换玩家
+            switchPlayer(gameId);
+        }
+
+        // 切换玩家
+        function switchPlayer(gameId) {
+            const game = games[gameId];
+            game.currentPlayer = game.currentPlayer === 'black' ? 'white' : 'black';
+            document.getElementById(`currentPlayer${gameId}`).textContent = `当前玩家：${game.currentPlayer === 'black' ? '黑棋' : '白棋'}`;
+        }
+
+        // 随机转换棋子颜色
+        function convertRandomPiece(gameId, fromColor, toColor) {
+            const game = games[gameId];
+            const pieces = [];
+
+            // 收集所有指定颜色的棋子
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (game.board[i][j] === fromColor) {
+                        pieces.push({row: i, col: j});
+                    }
+                }
+            }
+
+            // 如果有棋子，随机选择一个转换颜色
+            if (pieces.length > 0) {
+                const randomIndex = Math.floor(Math.random() * pieces.length);
+                const piece = pieces[randomIndex];
+
+                // 更新棋盘数据
+                game.board[piece.row][piece.col] = toColor;
+
+                // 更新UI
+                const cell = document.querySelector(`#gameBoard${gameId} [data-row="${piece.row}"][data-col="${piece.col}"]`);
+                cell.classList.remove(fromColor);
+                cell.classList.add(toColor);
+
+                // 显示提示信息
+                alert(`棋盘 ${gameId}：随机将一个${fromColor === 'black' ? '黑棋' : '白棋'}变为${toColor === 'black' ? '黑棋' : '白棋'}！`);
+            }
+        }
+
+        // 检查是否获胜
+        function checkWin(gameId, row, col) {
+            const game = games[gameId];
+            const color = game.board[row][col];
+
+            // 检查横向
+            let count = 1;
+            for (let j = col - 1; j >= 0 && game.board[row][j] === color; j--) count++;
+            for (let j = col + 1; j < BOARD_SIZE && game.board[row][j] === color; j++) count++;
+            if (count >= 5) return true;
+
+            // 检查纵向
+            count = 1;
+            for (let i = row - 1; i >= 0 && game.board[i][col] === color; i--) count++;
+            for (let i = row + 1; i < BOARD_SIZE && game.board[i][col] === color; i++) count++;
+            if (count >= 5) return true;
+
+            // 检查对角线（左上到右下）
+            count = 1;
+            for (let i = row - 1, j = col - 1; i >= 0 && j >= 0 && game.board[i][j] === color; i--, j--) count++;
+            for (let i = row + 1, j = col + 1; i < BOARD_SIZE && j < BOARD_SIZE && game.board[i][j] === color; i++, j++) count++;
+            if (count >= 5) return true;
+
+            // 检查对角线（右上到左下）
+            count = 1;
+            for (let i = row - 1, j = col + 1; i >= 0 && j < BOARD_SIZE && game.board[i][j] === color; i--, j++) count++;
+            for (let i = row + 1, j = col - 1; i < BOARD_SIZE && j >= 0 && game.board[i][j] === color; i++, j--) count++;
+            if (count >= 5) return true;
+
+            return false;
+        }
+
+        // 检查是否平局
+        function checkDraw(gameId) {
+            const game = games[gameId];
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (game.board[i][j] === '') {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        // 检查是否两个棋盘都获胜
+        function checkOverallWin() {
+            if (games[1].gameWon && games[2].gameWon) {
+                alert('恭喜！两个棋盘都获胜了，整体游戏胜利！');
+                document.getElementById('overallStatus').textContent = '整体状态：游戏胜利！';
+            } else {
+                updateOverallStatus();
+            }
+        }
+
+        // 更新整体状态
+        function updateOverallStatus() {
+            const game1Status = games[1].gameWon ? '已获胜' : (games[1].gameStarted ? '进行中' : '未开始');
+            const game2Status = games[2].gameWon ? '已获胜' : (games[2].gameStarted ? '进行中' : '未开始');
+            
+            document.getElementById('overallStatus').textContent = 
+                `整体状态：棋盘1(${game1Status}) | 棋盘2(${game2Status})`;
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            updateOverallStatus();
+        };
+    </script>
+</body>
+</html>
