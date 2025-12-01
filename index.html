@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trae AI数据</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        .container {
+            margin-top: 20px;
+            max-width: 1400px;
+        }
+        .header-info {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .search-bar {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .table th {
+            background-color: #e9ecef;
+            border-top: none;
+        }
+        .btn-sm {
+            margin-right: 5px;
+        }
+        .tag-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-passed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .collection-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .collection-item input {
+            flex: 1;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4 text-center text-secondary">Trae AI数据</h1>
+        
+        <div class="header-info d-flex justify-content-between align-items-center">
+            <div>
+                <span class="me-4"><strong>用户id：</strong>1875084792839892</span>
+                <span><strong>千识id：</strong>4771</span>
+            </div>
+        </div>
+
+        <!-- 查询区域 -->
+        <div class="search-bar">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="searchName" class="form-label">名称查询</label>
+                    <input type="text" class="form-control" id="searchName" placeholder="请输入名称关键词">
+                </div>
+                <div class="col-md-2">
+                    <label for="startDate" class="form-label">开始日期</label>
+                    <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-2">
+                    <label for="endDate" class="form-label">结束日期</label>
+                    <input type="date" class="form-control" id="endDate">
+                </div>
+                <div class="col-md-2">
+                    <label for="searchStatus" class="form-label">状态</label>
+                    <select class="form-select" id="searchStatus">
+                        <option value="">全部</option>
+                        <option value="审核中">审核中</option>
+                        <option value="已通过">已通过</option>
+                        <option value="未通过">未通过</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary me-2" onclick="searchData()">
+                        <i class="fa fa-search"></i> 查询
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetSearch()">
+                        <i class="fa fa-refresh"></i> 重置
+                    </button>
+                    <button class="btn btn-success float-end" onclick="openAddModal()">
+                        <i class="fa fa-plus"></i> 新增
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>名称</th>
+                                <th>创建时间</th>
+                                <th>修改时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/修改模态框 -->
+    <div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="dataModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dataModalLabel">新增数据</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="dataForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="modalId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="modalName" class="form-label">名称 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="modalName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modalRepo" class="form-label">仓库</label>
+                                <input type="text" class="form-control" id="modalRepo">
+                            </div>
+                            <div class="col-md-12">
+                                <label for="modalDesc" class="form-label">简介</label>
+                                <textarea class="form-control" id="modalDesc" rows="3"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modalStatus" class="form-label">状态 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="modalStatus" required>
+                                    <option value="审核中">审核中</option>
+                                    <option value="已通过">已通过</option>
+                                    <option value="未通过">未通过</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">sessionIds</label>
+                            <div id="sessionIdsContainer">
+                                <div class="collection-item">
+                                    <input type="text" class="form-control" placeholder="sessionId">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="addCollectionItem('sessionIdsContainer')">
+                                <i class="fa fa-plus"></i> 添加sessionId
+                            </button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">prs</label>
+                            <div id="prsContainer">
+                                <div class="collection-item">
+                                    <input type="text" class="form-control" placeholder="pr">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="addCollectionItem('prsContainer')">
+                                <i class="fa fa-plus"></i> 添加pr
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">数据详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">ID</label>
+                            <input type="text" class="form-control" id="detailId" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">名称</label>
+                            <input type="text" class="form-control" id="detailName" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">仓库</label>
+                            <input type="text" class="form-control" id="detailRepo" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">状态</label>
+                            <input type="text" class="form-control" id="detailStatus" disabled>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">简介</label>
+                            <textarea class="form-control" id="detailDesc" rows="3" disabled></textarea>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">sessionIds</label>
+                        <div id="detailSessionIds">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">prs</label>
+                        <div id="detailPrs">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">创建时间</label>
+                            <input type="text" class="form-control" id="detailCreateTime" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">修改时间</label>
+                            <input type="text" class="form-control" id="detailUpdateTime" disabled>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
+    <script>
+        // 模拟数据
+        let dataList = [
+            {
+                id: 1,
+                name: "测试案例1",
+                repo: "trae-ai/test1",
+                desc: "这是第一个测试案例",
+                status: "审核中",
+                sessionIds: ["session-001", "session-002"],
+                prs: ["pr-001"],
+                createTime: "2024-01-01 10:00:00",
+                updateTime: "2024-01-01 10:00:00"
+            },
+            {
+                id: 2,
+                name: "测试案例2",
+                repo: "trae-ai/test2",
+                desc: "这是第二个测试案例",
+                status: "已通过",
+                sessionIds: ["session-003"],
+                prs: ["pr-002", "pr-003"],
+                createTime: "2024-01-02 14:30:00",
+                updateTime: "2024-01-03 09:15:00"
+            },
+            {
+                id: 3,
+                name: "测试案例3",
+                repo: "trae-ai/test3",
+                desc: "这是第三个测试案例",
+                status: "未通过",
+                sessionIds: ["session-004", "session-005", "session-006"],
+                prs: [],
+                createTime: "2024-01-05 16:45:00",
+                updateTime: "2024-01-05 16:45:00"
+            }
+        ];
+
+        // 分页参数
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+        let filteredData = [...dataList];
+
+        $(document).ready(function() {
+            renderTable();
+            renderPagination();
+
+            // 表单提交
+            $("#dataForm").submit(function(e) {
+                e.preventDefault();
+                saveData();
+            });
+        });
+
+        // 查询数据
+        function searchData() {
+            const name = $("#searchName").val().trim().toLowerCase();
+            const startDate = $("#startDate").val();
+            const endDate = $("#endDate").val();
+            const status = $("#searchStatus").val();
+
+            filteredData = dataList.filter(item => {
+                let match = true;
+                
+                // 名称模糊查询
+                if (name && !item.name.toLowerCase().includes(name)) {
+                    match = false;
+                }
+                
+                // 日期范围查询
+                if (startDate) {
+                    const itemDate = item.createTime.split(' ')[0];
+                    if (itemDate < startDate) {
+                        match = false;
+                    }
+                }
+                
+                if (endDate) {
+                    const itemDate = item.createTime.split(' ')[0];
+                    if (itemDate > endDate) {
+                        match = false;
+                    }
+                }
+                
+                // 状态查询
+                if (status && item.status !== status) {
+                    match = false;
+                }
+                
+                return match;
+            });
+
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        // 重置查询
+        function resetSearch() {
+            $("#searchName").val("");
+            $("#startDate").val("");
+            $("#endDate").val("");
+            $("#searchStatus").val("");
+            filteredData = [...dataList];
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = $("#dataTableBody");
+            tbody.empty();
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            pageData.forEach(item => {
+                const statusClass = item.status === "审核中" ? "status-pending" : 
+                                  item.status === "已通过" ? "status-passed" : "status-failed";
+                
+                const row = `
+                    <tr>
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.createTime}</td>
+                        <td>${item.updateTime}</td>
+                        <td><span class="tag-status ${statusClass}">${item.status}</span></td>
+                        <td>
+                            <button class="btn btn-info btn-sm" onclick="openDetailModal(${item.id})">
+                                <i class="fa fa-eye"></i> 详情
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(${item.id})">
+                                <i class="fa fa-edit"></i> 修改
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteData(${item.id})">
+                                <i class="fa fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            if (pageData.length === 0) {
+                tbody.append(`
+                    <tr>
+                        <td colspan="6" class="text-center py-4">暂无数据</td>
+                    </tr>
+                `);
+            }
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            totalPages = Math.ceil(filteredData.length / pageSize);
+            const pagination = $("#pagination");
+            pagination.empty();
+
+            // 上一页
+            pagination.append(`
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="goToPage(${currentPage - 1})">上一页</a>
+                </li>
+            `);
+
+            // 页码
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.append(`
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="javascript:void(0)" onclick="goToPage(${i})">${i}</a>
+                    </li>
+                `);
+            }
+
+            // 下一页
+            pagination.append(`
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="goToPage(${currentPage + 1})">下一页</a>
+                </li>
+            `);
+        }
+
+        // 跳转页面
+        function goToPage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable();
+            renderPagination();
+        }
+
+        // 打开新增模态框
+        function openAddModal() {
+            $("#dataModalLabel").text("新增数据");
+            $("#modalId").val("");
+            $("#modalName").val("");
+            $("#modalRepo").val("");
+            $("#modalDesc").val("");
+            $("#modalStatus").val("审核中");
+            
+            // 重置sessionIds
+            $("#sessionIdsContainer").html(`
+                <div class="collection-item">
+                    <input type="text" class="form-control" placeholder="sessionId">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            `);
+            
+            // 重置prs
+            $("#prsContainer").html(`
+                <div class="collection-item">
+                    <input type="text" class="form-control" placeholder="pr">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            `);
+            
+            const modal = new bootstrap.Modal(document.getElementById('dataModal'));
+            modal.show();
+        }
+
+        // 打开编辑模态框
+        function openEditModal(id) {
+            const item = dataList.find(d => d.id === id);
+            if (!item) return;
+
+            $("#dataModalLabel").text("修改数据");
+            $("#modalId").val(item.id);
+            $("#modalName").val(item.name);
+            $("#modalRepo").val(item.repo);
+            $("#modalDesc").val(item.desc);
+            $("#modalStatus").val(item.status);
+            
+            // 渲染sessionIds
+            const sessionContainer = $("#sessionIdsContainer");
+            sessionContainer.empty();
+            if (item.sessionIds.length === 0) {
+                sessionContainer.append(`
+                    <div class="collection-item">
+                        <input type="text" class="form-control" placeholder="sessionId">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                `);
+            } else {
+                item.sessionIds.forEach(sessionId => {
+                    sessionContainer.append(`
+                        <div class="collection-item">
+                            <input type="text" class="form-control" value="${sessionId}">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </div>
+                    `);
+                });
+            }
+            
+            // 渲染prs
+            const prContainer = $("#prsContainer");
+            prContainer.empty();
+            if (item.prs.length === 0) {
+                prContainer.append(`
+                    <div class="collection-item">
+                        <input type="text" class="form-control" placeholder="pr">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                `);
+            } else {
+                item.prs.forEach(pr => {
+                    prContainer.append(`
+                        <div class="collection-item">
+                            <input type="text" class="form-control" value="${pr}">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </div>
+                    `);
+                });
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('dataModal'));
+            modal.show();
+        }
+
+        // 打开详情模态框
+        function openDetailModal(id) {
+            const item = dataList.find(d => d.id === id);
+            if (!item) return;
+
+            $("#detailId").val(item.id);
+            $("#detailName").val(item.name);
+            $("#detailRepo").val(item.repo);
+            $("#detailStatus").val(item.status);
+            $("#detailDesc").val(item.desc);
+            $("#detailCreateTime").val(item.createTime);
+            $("#detailUpdateTime").val(item.updateTime);
+
+            // 渲染sessionIds
+            const sessionContainer = $("#detailSessionIds");
+            sessionContainer.empty();
+            if (item.sessionIds.length === 0) {
+                sessionContainer.append(`<span class="text-muted">无</span>`);
+            } else {
+                const tags = item.sessionIds.map(sessionId => `<span class="badge bg-secondary me-2 mb-2">${sessionId}</span>`).join('');
+                sessionContainer.append(tags);
+            }
+
+            // 渲染prs
+            const prContainer = $("#detailPrs");
+            prContainer.empty();
+            if (item.prs.length === 0) {
+                prContainer.append(`<span class="text-muted">无</span>`);
+            } else {
+                const tags = item.prs.map(pr => `<span class="badge bg-secondary me-2 mb-2">${pr}</span>`).join('');
+                prContainer.append(tags);
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+            modal.show();
+        }
+
+        // 添加集合项
+        function addCollectionItem(containerId) {
+            const container = $(`#${containerId}`);
+            container.append(`
+                <div class="collection-item">
+                    <input type="text" class="form-control" placeholder="${containerId === 'sessionIdsContainer' ? 'sessionId' : 'pr'}">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeCollectionItem(this)">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            `);
+        }
+
+        // 删除集合项
+        function removeCollectionItem(btn) {
+            const container = $(btn).closest('.collection-item').parent();
+            if (container.children().length > 1) {
+                $(btn).closest('.collection-item').remove();
+            }
+        }
+
+        // 保存数据
+        function saveData() {
+            const id = $("#modalId").val();
+            const name = $("#modalName").val().trim();
+            const repo = $("#modalRepo").val().trim();
+            const desc = $("#modalDesc").val().trim();
+            const status = $("#modalStatus").val();
+
+            // 获取sessionIds
+            const sessionIds = $("#sessionIdsContainer input").map(function() {
+                return $(this).val().trim();
+            }).get().filter(v => v);
+
+            // 获取prs
+            const prs = $("#prsContainer input").map(function() {
+                return $(this).val().trim();
+            }).get().filter(v => v);
+
+            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+            if (id) {
+                // 修改
+                const index = dataList.findIndex(d => d.id == id);
+                if (index !== -1) {
+                    dataList[index] = {
+                        ...dataList[index],
+                        name,
+                        repo,
+                        desc,
+                        status,
+                        sessionIds,
+                        prs,
+                        updateTime: now
+                    };
+                }
+            } else {
+                // 新增
+                const newId = Math.max(...dataList.map(d => d.id), 0) + 1;
+                dataList.push({
+                    id: newId,
+                    name,
+                    repo,
+                    desc,
+                    status,
+                    sessionIds,
+                    prs,
+                    createTime: now,
+                    updateTime: now
+                });
+            }
+
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('dataModal'));
+            modal.hide();
+
+            // 刷新数据
+            searchData();
+        }
+
+        // 删除数据
+        function deleteData(id) {
+            if (confirm('确定要删除这条数据吗？')) {
+                dataList = dataList.filter(d => d.id !== id);
+                searchData();
+            }
+        }
+    </script>
+</body>
+</html>
