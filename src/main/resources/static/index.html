@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜单词游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .word-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .word-letters {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .letter-box.revealed {
+            background: #667eea;
+            color: white;
+        }
+
+        .letter-box.correct {
+            background: #28a745;
+            color: white;
+        }
+
+        .letter-box.wrong {
+            background: #dc3545;
+            color: white;
+        }
+
+        .guessed-letters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .guessed-letter {
+            padding: 8px 15px;
+            background: #e9ecef;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .guessed-letter.correct {
+            background: #28a745;
+            color: white;
+        }
+
+        .guessed-letter.wrong {
+            background: #dc3545;
+            color: white;
+        }
+
+        .guess-input {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .guess-input input {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .guess-input input:focus {
+            border-color: #667eea;
+        }
+
+        .guess-input button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .guess-input button:hover {
+            background: #5568d3;
+        }
+
+        .guess-input button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .game-message {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .game-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .game-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .game-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .game-controls button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .settings-form {
+            margin-bottom: 30px;
+        }
+
+        .settings-form label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .settings-form input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .settings-form input:focus {
+            border-color: #667eea;
+        }
+
+        .settings-form button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .settings-form button:hover {
+            background: #5568d3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .letter-box {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+
+            .game-stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 猜单词游戏</h1>
+
+        <!-- 游戏设置 -->
+        <div id="settings" class="settings-form">
+            <div class="game-message" id="settings-message"></div>
+            <label for="max-guesses">请输入最大猜测次数：</label>
+            <input type="number" id="max-guesses" min="1" value="10" placeholder="输入猜测次数">
+            <button id="start-game">开始游戏</button>
+        </div>
+
+        <!-- 游戏主界面 -->
+        <div id="game" class="hidden">
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-label">剩余次数</div>
+                    <div class="stat-value" id="remaining-guesses">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">已猜字母</div>
+                    <div class="stat-value" id="guessed-count">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">正确字母</div>
+                    <div class="stat-value" id="correct-count">0</div>
+                </div>
+            </div>
+
+            <div class="word-display">
+                <div class="word-letters" id="word-letters"></div>
+                <div class="guessed-letters" id="guessed-letters"></div>
+            </div>
+
+            <div class="guess-input">
+                <input type="text" id="guess-input" maxlength="1" placeholder="输入一个字母" disabled>
+                <button id="guess-button" disabled>猜字母</button>
+            </div>
+
+            <div class="game-message" id="game-message"></div>
+
+            <div class="game-controls">
+                <button id="new-game" class="btn-primary">新游戏</button>
+                <button id="give-up" class="btn-secondary">放弃</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 单词库
+        const wordLibrary = [
+            'apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape',
+            'honeydew', 'kiwi', 'lemon', 'mango', 'nectarine', 'orange',
+            'peach', 'pear', 'quince', 'raspberry', 'strawberry', 'tangerine',
+            'watermelon', 'avocado', 'blueberry', 'coconut', 'dragonfruit',
+            'grapefruit', 'lime', 'pineapple', 'pomegranate', 'blackberry',
+            'cantaloupe', 'cranberry', 'currant', 'gooseberry', 'guava',
+            'jackfruit', 'kiwifruit', 'lemon', 'lime', 'lychee', 'mandarin',
+            'mango', 'melon', 'nectarine', 'orange', 'papaya', 'passionfruit',
+            'peach', 'pear', 'persimmon', 'pineapple', 'plum', 'pomegranate',
+            'quince', 'raisin', 'raspberry', 'strawberry', 'tangerine',
+            'watermelon', 'apricot', 'blackberry', 'blueberry', 'boysenberry',
+            'cantaloupe', 'cherry', 'coconut', 'cranberry', 'currant',
+            'date', 'dragonfruit', 'fig', 'grape', 'grapefruit', 'guava',
+            'honeydew', 'jackfruit', 'kiwi', 'lemon', 'lime', 'lychee',
+            'mango', 'nectarine', 'orange', 'papaya', 'peach', 'pear',
+            'pineapple', 'plum', 'pomegranate', 'raspberry', 'strawberry',
+            'tangerine', 'watermelon', 'avocado', 'banana', 'blackberry',
+            'blueberry', 'boysenberry', 'cantaloupe', 'cherry', 'coconut',
+            'cranberry', 'currant', 'date', 'dragonfruit', 'fig', 'grape',
+            'grapefruit', 'guava', 'honeydew', 'jackfruit', 'kiwi', 'lemon',
+            'lime', 'lychee', 'mango', 'nectarine', 'orange', 'papaya',
+            'peach', 'pear', 'pineapple', 'plum', 'pomegranate', 'raspberry',
+            'strawberry', 'tangerine', 'watermelon'
+        ];
+
+        // 游戏状态
+        let gameState = {
+            targetWord: '',
+            maxGuesses: 0,
+            remainingGuesses: 0,
+            guessedLetters: [],
+            correctLetters: [],
+            gameOver: false
+        };
+
+        // DOM 元素
+        const settingsDiv = document.getElementById('settings');
+        const gameDiv = document.getElementById('game');
+        const maxGuessesInput = document.getElementById('max-guesses');
+        const startGameBtn = document.getElementById('start-game');
+        const settingsMessageEl = document.getElementById('settings-message');
+        const remainingGuessesEl = document.getElementById('remaining-guesses');
+        const guessedCountEl = document.getElementById('guessed-count');
+        const correctCountEl = document.getElementById('correct-count');
+        const wordLettersEl = document.getElementById('word-letters');
+        const guessedLettersEl = document.getElementById('guessed-letters');
+        const guessInput = document.getElementById('guess-input');
+        const guessButton = document.getElementById('guess-button');
+        const gameMessageEl = document.getElementById('game-message');
+        const newGameBtn = document.getElementById('new-game');
+        const giveUpBtn = document.getElementById('give-up');
+
+        // 初始化事件监听
+        function initEventListeners() {
+            startGameBtn.addEventListener('click', startGame);
+            guessButton.addEventListener('click', makeGuess);
+            guessInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    makeGuess();
+                }
+            });
+            newGameBtn.addEventListener('click', resetGame);
+            giveUpBtn.addEventListener('click', giveUp);
+        }
+
+        // 开始游戏
+        function startGame() {
+            const maxGuesses = parseInt(maxGuessesInput.value);
+            
+            if (isNaN(maxGuesses) || maxGuesses < 1) {
+                showSettingsMessage('请输入有效的猜测次数（至少1次）', 'error');
+                return;
+            }
+
+            // 随机选择一个单词
+            const randomIndex = Math.floor(Math.random() * wordLibrary.length);
+            gameState.targetWord = wordLibrary[randomIndex].toLowerCase();
+            
+            // 验证猜测次数是否小于单词长度
+            if (maxGuesses < gameState.targetWord.length) {
+                showSettingsMessage(`猜测次数（${maxGuesses}）小于单词长度（${gameState.targetWord.length}），请重新输入！`, 'error');
+                return;
+            }
+
+            gameState.maxGuesses = maxGuesses;
+            gameState.remainingGuesses = maxGuesses;
+            gameState.guessedLetters = [];
+            gameState.correctLetters = [];
+            gameState.gameOver = false;
+
+            // 更新界面
+            updateUI();
+            
+            // 切换到游戏界面
+            settingsDiv.classList.add('hidden');
+            gameDiv.classList.remove('hidden');
+            
+            // 启用输入
+            guessInput.disabled = false;
+            guessButton.disabled = false;
+            guessInput.focus();
+        }
+
+        // 更新界面
+        function updateUI() {
+            // 更新统计信息
+            remainingGuessesEl.textContent = gameState.remainingGuesses;
+            guessedCountEl.textContent = gameState.guessedLetters.length;
+            correctCountEl.textContent = gameState.correctLetters.length;
+
+            // 显示单词
+            displayWord();
+            
+            // 显示已猜字母
+            displayGuessedLetters();
+            
+            // 清空游戏消息
+            gameMessageEl.textContent = '';
+            gameMessageEl.className = 'game-message';
+        }
+
+        // 显示单词
+        function displayWord() {
+            wordLettersEl.innerHTML = '';
+            
+            for (let i = 0; i < gameState.targetWord.length; i++) {
+                const letter = gameState.targetWord[i];
+                const letterBox = document.createElement('div');
+                letterBox.className = 'letter-box';
+                
+                if (gameState.correctLetters.includes(letter)) {
+                    letterBox.textContent = letter;
+                    letterBox.classList.add('revealed');
+                }
+                
+                wordLettersEl.appendChild(letterBox);
+            }
+        }
+
+        // 显示已猜字母
+        function displayGuessedLetters() {
+            guessedLettersEl.innerHTML = '';
+            
+            gameState.guessedLetters.forEach(letter => {
+                const letterEl = document.createElement('div');
+                letterEl.className = 'guessed-letter';
+                letterEl.textContent = letter;
+                
+                if (gameState.correctLetters.includes(letter)) {
+                    letterEl.classList.add('correct');
+                } else {
+                    letterEl.classList.add('wrong');
+                }
+                
+                guessedLettersEl.appendChild(letterEl);
+            });
+        }
+
+        // 猜字母
+        function makeGuess() {
+            if (gameState.gameOver) return;
+            
+            const guess = guessInput.value.toLowerCase().trim();
+            
+            // 验证输入
+            if (!guess) {
+                showMessage('请输入一个字母', 'error');
+                return;
+            }
+            
+            if (guess.length > 1) {
+                showMessage('只能输入一个字母', 'error');
+                guessInput.value = '';
+                return;
+            }
+            
+            if (!/^[a-z]$/.test(guess)) {
+                showMessage('请输入有效的英文字母', 'error');
+                guessInput.value = '';
+                return;
+            }
+            
+            if (gameState.guessedLetters.includes(guess)) {
+                showMessage('这个字母已经猜过了', 'error');
+                guessInput.value = '';
+                return;
+            }
+            
+            // 添加到已猜字母
+            gameState.guessedLetters.push(guess);
+            
+            // 检查是否正确
+            if (gameState.targetWord.includes(guess)) {
+                gameState.correctLetters.push(guess);
+                showMessage(`恭喜！字母 "${guess}" 是正确的！`, 'success');
+                
+                // 检查是否胜利
+                if (checkWin()) {
+                    endGame(true);
+                    return;
+                }
+            } else {
+                gameState.remainingGuesses--;
+                showMessage(`很遗憾，字母 "${guess}" 不在单词中`, 'error');
+                
+                // 检查是否失败
+                if (gameState.remainingGuesses <= 0) {
+                    endGame(false);
+                    return;
+                }
+            }
+            
+            // 更新界面
+            updateUI();
+            
+            // 清空输入框
+            guessInput.value = '';
+            guessInput.focus();
+        }
+
+        // 检查是否胜利
+        function checkWin() {
+            for (let letter of gameState.targetWord) {
+                if (!gameState.correctLetters.includes(letter)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // 结束游戏
+        function endGame(won) {
+            gameState.gameOver = true;
+            
+            // 禁用输入
+            guessInput.disabled = true;
+            guessButton.disabled = true;
+            
+            // 显示结果
+            if (won) {
+                showMessage(`🎉 恭喜你胜利了！单词是 "${gameState.targetWord}"！`, 'success');
+                revealAllLetters();
+            } else {
+                showMessage(`😢 很遗憾你失败了！单词是 "${gameState.targetWord}"。`, 'error');
+                revealAllLetters();
+            }
+        }
+
+        // 显示所有字母
+        function revealAllLetters() {
+            const letterBoxes = wordLettersEl.querySelectorAll('.letter-box');
+            
+            for (let i = 0; i < letterBoxes.length; i++) {
+                const letter = gameState.targetWord[i];
+                const letterBox = letterBoxes[i];
+                
+                letterBox.textContent = letter;
+                
+                if (gameState.correctLetters.includes(letter)) {
+                    letterBox.classList.add('correct');
+                } else {
+                    letterBox.classList.add('wrong');
+                }
+            }
+        }
+
+        // 放弃游戏
+        function giveUp() {
+            if (gameState.gameOver) return;
+            
+            if (confirm('确定要放弃吗？')) {
+                endGame(false);
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            gameDiv.classList.add('hidden');
+            settingsDiv.classList.remove('hidden');
+            maxGuessesInput.value = '10';
+            maxGuessesInput.focus();
+            
+            // 清空游戏状态
+            gameState = {
+                targetWord: '',
+                maxGuesses: 0,
+                remainingGuesses: 0,
+                guessedLetters: [],
+                correctLetters: [],
+                gameOver: false
+            };
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            gameMessageEl.textContent = message;
+            gameMessageEl.className = `game-message ${type}`;
+        }
+
+        // 显示设置界面消息
+        function showSettingsMessage(message, type) {
+            settingsMessageEl.textContent = message;
+            settingsMessageEl.className = `game-message ${type}`;
+        }
+
+        // 初始化游戏
+        initEventListeners();
+        
+        // 页面加载完成后自动聚焦到输入框
+        window.addEventListener('DOMContentLoaded', () => {
+            maxGuessesInput.focus();
+        });
+    </script>
+</body>
+</html>
