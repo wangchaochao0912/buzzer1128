@@ -1,0 +1,28 @@
+# Maven project ignore rules
+.target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDE ignore rules
+.idea/
+.eclipse/
+*.swp
+*.swo
+*~
+
+# OS ignore rules
+.DS_Store
+Thumbs.db
+
+# Log ignore rules
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
