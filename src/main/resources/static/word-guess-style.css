@@ -1,0 +1,221 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.game-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
+
+.setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.setup-form label {
+    font-size: 1.2em;
+    color: #555;
+    font-weight: bold;
+}
+
+.setup-form input {
+    padding: 12px 20px;
+    font-size: 1.2em;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    width: 200px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.setup-form input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+button {
+    padding: 12px 30px;
+    font-size: 1.1em;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-weight: bold;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.error-message {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-top: 10px;
+    min-height: 20px;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    font-size: 1.1em;
+}
+
+.word-display {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 40px 0;
+    flex-wrap: wrap;
+}
+
+.letter-box {
+    width: 50px;
+    height: 50px;
+    border-bottom: 3px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    font-size: 2em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.guess-input {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.guess-input input {
+    padding: 15px;
+    font-size: 1.5em;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    width: 80px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.guess-input input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.game-message {
+    min-height: 30px;
+    margin: 20px 0;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.game-message.success {
+    color: #27ae60;
+}
+
+.game-message.error {
+    color: #e74c3c;
+}
+
+.restart-btn {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+#result-screen h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+#result-screen h2.win {
+    color: #27ae60;
+}
+
+#result-screen h2.lose {
+    color: #e74c3c;
+}
+
+#result-detail {
+    font-size: 1.3em;
+    margin-bottom: 30px;
+    color: #555;
+}
+
+.guessed-letters span {
+    display: inline-block;
+    margin: 0 5px;
+    padding: 4px 8px;
+    background: #667eea;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+@media (max-width: 600px) {
+    .game-container {
+        padding: 20px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .letter-box {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5em;
+    }
+}
