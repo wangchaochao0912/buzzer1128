@@ -1,5 +1,5 @@
 # Maven project ignore rules
-.target/
+target/
 *.class
 *.jar
 *.war
