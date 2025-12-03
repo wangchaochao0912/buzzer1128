@@ -1,2 +1,6 @@
-G:\buzzer1128\src\main\java\com\example\buzzer\controller\HelloController.java
-G:\buzzer1128\src\main\java\com\example\buzzer\BuzzerApplication.java
+/Users/wangchaochao/workspace/github/buzzer/1202008/002/buzzer1128/src/main/java/com/example/buzzer/model/GenericSaveRequest.java
+/Users/wangchaochao/workspace/github/buzzer/1202008/002/buzzer1128/src/main/java/com/example/buzzer/controller/GenericDataController.java
+/Users/wangchaochao/workspace/github/buzzer/1202008/002/buzzer1128/src/main/java/com/example/buzzer/BuzzerApplication.java
+/Users/wangchaochao/workspace/github/buzzer/1202008/002/buzzer1128/src/main/java/com/example/buzzer/service/impl/GenericDataServiceImpl.java
+/Users/wangchaochao/workspace/github/buzzer/1202008/002/buzzer1128/src/main/java/com/example/buzzer/service/GenericDataService.java
+/Users/wangchaochao/workspace/github/buzzer/1202008/002/buzzer1128/src/main/java/com/example/buzzer/controller/HelloController.java
